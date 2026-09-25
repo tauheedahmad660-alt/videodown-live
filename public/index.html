@@ -1,51 +1,37 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VideoDown</title>
-
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: #f4f6f8;
       color: #111827;
     }
-
     .container {
       width: min(700px, 92%);
       margin: 70px auto;
     }
-
     .card {
       background: white;
       padding: 30px;
       border-radius: 18px;
       box-shadow: 0 10px 30px rgba(0,0,0,.08);
     }
-
-    h1 {
-      margin-top: 0;
-      text-align: center;
-    }
-
+    h1 { text-align: center; margin-top: 0; }
     .subtitle {
       text-align: center;
       color: #6b7280;
       margin-bottom: 28px;
     }
-
     .input-row {
       display: flex;
       gap: 10px;
     }
-
     input {
       flex: 1;
       padding: 14px;
@@ -53,7 +39,6 @@
       border-radius: 10px;
       font-size: 15px;
     }
-
     button {
       border: 0;
       border-radius: 10px;
@@ -62,19 +47,16 @@
       font-size: 15px;
       font-weight: 600;
     }
-
     .fetch {
       background: #111827;
       color: white;
     }
-
     .result {
       display: none;
       margin-top: 28px;
       padding-top: 25px;
       border-top: 1px solid #e5e7eb;
     }
-
     .thumbnail {
       width: 100%;
       max-width: 480px;
@@ -82,13 +64,11 @@
       margin: 0 auto 20px;
       border-radius: 12px;
     }
-
     .video-id {
       text-align: center;
       color: #6b7280;
       margin-bottom: 20px;
     }
-
     .notice {
       background: #fff7ed;
       border: 1px solid #fed7aa;
@@ -96,43 +76,32 @@
       border-radius: 10px;
       line-height: 1.5;
     }
-
     .qualities {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       margin-top: 18px;
     }
-
     .quality {
       background: #e5e7eb;
       color: #6b7280;
       cursor: not-allowed;
     }
-
     .status {
       margin-top: 15px;
       text-align: center;
       color: #6b7280;
     }
-
     @media (max-width: 600px) {
-      .input-row {
-        flex-direction: column;
-      }
-
-      .fetch {
-        width: 100%;
-      }
+      .input-row { flex-direction: column; }
+      .fetch { width: 100%; }
     }
   </style>
 </head>
 
 <body>
-
   <div class="container">
     <div class="card">
-
       <h1>VideoDown</h1>
 
       <p class="subtitle">
@@ -140,11 +109,8 @@
       </p>
 
       <div class="input-row">
-        <input
-          id="youtubeUrl"
-          type="url"
-          placeholder="Paste YouTube URL here"
-        >
+        <input id="youtubeUrl" type="url"
+               placeholder="Paste YouTube URL here">
 
         <button class="fetch" onclick="fetchVideo()">
           Fetch
@@ -154,12 +120,7 @@
       <div id="status" class="status"></div>
 
       <div id="result" class="result">
-
-        <img
-          id="thumbnail"
-          class="thumbnail"
-          alt="Video preview"
-        >
+        <img id="thumbnail" class="thumbnail" alt="Video preview">
 
         <div id="videoId" class="video-id"></div>
 
@@ -176,9 +137,7 @@
           <button class="quality" disabled>720p</button>
           <button class="quality" disabled>1080p</button>
         </div>
-
       </div>
-
     </div>
   </div>
 
@@ -217,12 +176,9 @@
         }
 
         thumbnail.src = data.thumbnail;
-
-        videoId.textContent =
-          "YouTube Video ID: " + data.videoId;
+        videoId.textContent = "YouTube Video ID: " + data.videoId;
 
         result.style.display = "block";
-
         status.textContent = "Video identified successfully.";
 
       } catch (error) {
@@ -230,6 +186,5 @@
       }
     }
   </script>
-
 </body>
 </html>
