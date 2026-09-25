@@ -1,0 +1,16 @@
+{
+  "name": "videodown-live-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Authorized media download backend for VideoDown",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
