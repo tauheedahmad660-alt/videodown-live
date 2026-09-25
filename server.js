@@ -1,147 +1,107 @@
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
+const multer = require("multer");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const uploadDir = path.join(__dirname, "uploads");
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadDir);
+  },
+
+  filename: (_req, file, cb) => {
+    const safeName = path
+      .basename(file.originalname)
+      .replace(/[^a-zA-Z0-9._-]/g, "_");
+
+    cb(null, `${Date.now()}-${safeName}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 500 * 1024 * 1024
+  },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith("video/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Sirf video files allowed hain."));
+    }
+  }
+});
+
 app.use(express.json({ limit: "20kb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
-// YouTube URL se video ID nikalna
-function getYouTubeVideoId(rawUrl) {
-  let url;
 
-  try {
-    url = new URL(rawUrl);
-  } catch {
-    return null;
-  }
-
-  const host = url.hostname.toLowerCase().replace(/^www\./, "");
-
-  // youtube.com/watch?v=VIDEO_ID
-  if (host === "youtube.com" || host === "m.youtube.com") {
-    if (url.pathname === "/watch") {
-      return url.searchParams.get("v");
-    }
-
-    // youtube.com/shorts/VIDEO_ID
-    if (url.pathname.startsWith("/shorts/")) {
-      return url.pathname.split("/")[2];
-    }
-
-    // youtube.com/embed/VIDEO_ID
-    if (url.pathname.startsWith("/embed/")) {
-      return url.pathname.split("/")[2];
-    }
-  }
-
-  // youtu.be/VIDEO_ID
-  if (host === "youtu.be") {
-    return url.pathname.split("/")[1];
-  }
-
-  return null;
-}
-
-function cleanVideoId(id) {
-  if (!id) return null;
-
-  // Normal YouTube video IDs are generally 11 characters.
-  if (!/^[A-Za-z0-9_-]{11}$/.test(id)) {
-    return null;
-  }
-
-  return id;
-}
-
-// YouTube URL identify/preview
-app.post("/api/youtube/info", (req, res) => {
-  try {
-    const { url } = req.body || {};
-
-    if (!url) {
-      return res.status(400).json({
-        ok: false,
-        error: "YouTube URL is required."
-      });
-    }
-
-    const videoId = cleanVideoId(getYouTubeVideoId(url));
-
-    if (!videoId) {
-      return res.status(400).json({
-        ok: false,
-        error: "Valid YouTube video URL nahi mili."
-      });
-    }
-
-    res.json({
-      ok: true,
-      videoId,
-
-      // Public thumbnail for preview
-      thumbnail:
-        `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
-
-      // Demo information
-      authorized: false,
-
-      message:
-        "Demo mode: authorization/source file required before download.",
-
-      qualities: [
-        {
-          quality: "144p",
-          available: false
-        },
-        {
-          quality: "360p",
-          available: false
-        },
-        {
-          quality: "480p",
-          available: false
-        },
-        {
-          quality: "720p",
-          available: false
-        },
-        {
-          quality: "1080p",
-          available: false
-        }
-      ]
-    });
-  } catch (err) {
-    res.status(400).json({
+// Upload authorized video
+app.post("/api/upload", upload.single("video"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({
       ok: false,
-      error: "Unable to process URL."
+      error: "Video file select karo."
     });
   }
-});
 
-// Demo download endpoint
-// Actual YouTube media download intentionally disabled.
-app.get("/api/download", (_req, res) => {
-  res.status(403).json({
-    ok: false,
-    error:
-      "Demo mode: YouTube media download is disabled. Add an authorized source file to enable downloading."
+  res.json({
+    ok: true,
+    message: "Video successfully uploaded.",
+    filename: req.file.filename,
+    originalName: req.file.originalname,
+    size: req.file.size,
+    downloadUrl: `/api/download/${encodeURIComponent(req.file.filename)}`
   });
 });
 
+
+// Download uploaded video
+app.get("/api/download/:filename", (req, res) => {
+  const filename = path.basename(req.params.filename);
+  const filePath = path.join(uploadDir, filename);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({
+      ok: false,
+      error: "Video file nahi mili."
+    });
+  }
+
+  res.download(filePath, filename);
+});
+
+
+// Health check
 app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
-    service: "VideoDown demo backend"
+    service: "VideoDown authorized media backend"
   });
 });
+
 
 // Frontend
 app.get("*", (_req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
+
+app.use((err, _req, res, _next) => {
+  res.status(400).json({
+    ok: false,
+    error: err.message || "Upload failed."
+  });
+});
+
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`VideoDown server running on port ${PORT}`);
