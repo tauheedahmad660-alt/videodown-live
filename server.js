@@ -43,8 +43,6 @@ const upload = multer({
 app.use(express.json({ limit: "20kb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
-
-// Upload authorized video
 app.post("/api/upload", upload.single("video"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({
@@ -63,8 +61,6 @@ app.post("/api/upload", upload.single("video"), (req, res) => {
   });
 });
 
-
-// Download uploaded video
 app.get("/api/download/:filename", (req, res) => {
   const filename = path.basename(req.params.filename);
   const filePath = path.join(uploadDir, filename);
@@ -79,8 +75,6 @@ app.get("/api/download/:filename", (req, res) => {
   res.download(filePath, filename);
 });
 
-
-// Health check
 app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
@@ -88,12 +82,9 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
-
-// Frontend
 app.get("*", (_req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
-
 
 app.use((err, _req, res, _next) => {
   res.status(400).json({
@@ -101,7 +92,6 @@ app.use((err, _req, res, _next) => {
     error: err.message || "Upload failed."
   });
 });
-
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`VideoDown server running on port ${PORT}`);
