@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VideoDown — Live</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f7f8fc;color:#111827}
+main{max-width:760px;margin:70px auto;padding:24px}.card{background:#fff;border:1px solid #e7eaf0;border-radius:22px;padding:28px;box-shadow:0 18px 50px #20264012}
+h1{font-size:42px;margin:0 0 10px}p{color:#687386}.row{display:flex;gap:10px}input{flex:1;height:52px;border:1px solid #dfe3ea;border-radius:12px;padding:0 15px;font-size:15px}button{border:0;border-radius:12px;background:#635bff;color:#fff;padding:0 18px;font-weight:700;cursor:pointer}button:hover{background:#5148e5}
+#result{margin-top:22px}.qualities{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:15px}.q{height:62px;background:#fff;color:#111827;border:1px solid #e0e3ea}.q.active{background:#f0efff;border-color:#635bff;color:#5148e5}.download{width:100%;height:52px;margin-top:14px}.msg{font-size:13px;margin-top:12px}.error{color:#c0392b}.ok{color:#14804a}@media(max-width:600px){main{margin:25px auto}.row{flex-direction:column}.row button{height:52px}.qualities{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<main>
+<div class="card">
+<h1>Video<span style="color:#635bff">Down</span></h1>
+<p>Authorized media downloader — use only media you have permission to download.</p>
+<div class="row">
+<input id="url" type="url" placeholder="https://your-domain.com/video.mp4">
+<button id="fetch">Fetch</button>
+</div>
+<div id="msg" class="msg"></div>
+<div id="result" hidden>
+<h3 id="title">Video</h3>
+<div class="qualities">
+<button class="q active" data-q="144p">144p</button>
+<button class="q" data-q="360p">360p</button>
+<button class="q" data-q="480p">480p</button>
+<button class="q" data-q="720p">720p</button>
+<button class="q" data-q="1080p">1080p</button>
+</div>
+<button id="download" class="download">Download <span id="quality">144p</span></button>
+</div>
+</div>
+</main>
+<script>
+let selected="144p", currentUrl="";
+const $=id=>document.getElementById(id);
+document.querySelectorAll(".q").forEach(b=>b.onclick=()=>{
+ document.querySelectorAll(".q").forEach(x=>x.classList.remove("active"));
+ b.classList.add("active"); selected=b.dataset.q; $("quality").textContent=selected;
+});
+$("fetch").onclick=async()=>{
+ const url=$("url").value.trim();
+ $("msg").textContent="Checking…"; $("msg").className="msg";
+ try{
+  const r=await fetch("/api/video/info",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url})});
+  const d=await r.json(); if(!r.ok||!d.ok) throw new Error(d.error||"Could not fetch video");
+  currentUrl=d.qualities[0].url; $("title").textContent=d.title; $("result").hidden=false;
+  $("msg").textContent="Video found. Select quality and download."; $("msg").className="msg ok";
+ }catch(e){$("msg").textContent=e.message;$("msg").className="msg error";$("result").hidden=true;}
+};
+$("download").onclick=()=>{
+ if(!currentUrl)return;
+ window.location.href="/api/download?url="+encodeURIComponent(currentUrl);
+};
+</script>
+</body>
+</html>
